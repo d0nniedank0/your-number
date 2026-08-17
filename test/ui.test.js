@@ -1,0 +1,146 @@
+/* UI tests — jsdom, full-page flow, zero console errors. */
+"use strict";
+
+const assert = require("assert");
+const fs = require("fs");
+const path = require("path");
+const { JSDOM } = require("jsdom");
+
+const ROOT = path.join(__dirname, "..");
+const HTML = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+
+/* Attribute-tolerant inline loader: script tags carry defer/attrs. */
+function inlineScripts(html) {
+  return html.replace(/<script src="([^"]+)"[^>]*><\/script>/g, function (_, src) {
+    const code = fs.readFileSync(path.join(ROOT, src), "utf8");
+    return "<script>" + code.replace(/<\/script>/g, "<\\/script>") + "</scr" + "ipt>";
+  });
+}
+
+function matchMediaShim() {
+  return {
+    matches: false,
+    addListener: function () {},
+    removeListener: function () {},
+    addEventListener: function () {},
+    removeEventListener: function () {},
+    dispatchEvent: function () { return false; },
+  };
+}
+
+function buildWindow(seedAnswers) {
+  const errors = [];
+  const dom = new JSDOM(inlineScripts(HTML), {
+    runScripts: "dangerously",
+    url: "http://localhost/",
+    pretendToBeVisual: true,
+    beforeParse(window) {
+      window.matchMedia = window.matchMedia || matchMediaShim;
+      window.scrollTo = function () {}; // jsdom logs "Not implemented" otherwise
+      try { window.localStorage.clear(); } catch (e) { /* ignore */ }
+      if (seedAnswers !== undefined) {
+        window.localStorage.setItem("yn:v1:answers", JSON.stringify(seedAnswers));
+      }
+      window.addEventListener("error", function (ev) { errors.push(ev.message || String(ev)); });
+    },
+  });
+  return { window: dom.window, document: dom.window.document, errors: errors };
+}
+
+let passed = 0;
+function ok(cond, name, ctx) {
+  if (cond) { passed++; console.log("  ok  " + name); }
+  else {
+    console.error("FAIL " + name + (ctx ? "\n     ctx: " + JSON.stringify(ctx).slice(0, 200) : ""));
+    process.exitCode = 1;
+  }
+}
+
+/* ---------- fresh start: intro → full flow → result ---------- */
+
+{
+  const { window, document: doc, errors } = buildWindow();
+  const $ = (id) => doc.getElementById(id);
+
+  ok(doc.querySelector("#view-intro").hidden === false, "intro visible on load");
+  ok(doc.querySelector("#view-quiz").hidden === true, "quiz hidden on load");
+  ok($("btn-start").textContent.indexOf("Begin") !== -1, "fresh start button says Begin");
+
+  $("btn-start").click();
+  ok(doc.querySelector("#view-quiz").hidden === false, "clicking Begin shows the quiz");
+  ok($("quiz-progress-label").textContent === "Question 1 of 45", "progress label starts at 1 of 45");
+  ok($("btn-next").disabled === true, "Next disabled until an answer is picked");
+  ok($("quiz-options").children.length === 5, "five options rendered");
+  ok($("quiz-text").textContent.length > 5, "question text rendered");
+
+  // Answer all 45 with (item's own type number) → deterministic type 9 result.
+  // Access engine data through the global lexical scope via a script element.
+  // Simpler: re-derive the same mapping from the rendered question order.
+  let idx = 0;
+  for (; idx < 45; idx++) {
+    const group = Math.floor(idx / 5);          // 0..8
+    const want = (group % 5) + 1;               // types 1..5 → 1..5, types 6..9 → 1..4
+    const target = Array.prototype.find.call(
+      $("quiz-options").children,
+      (b) => Number(b.dataset.value) === want
+    );
+    ok(!!target, "option for value " + want + " exists at question " + (idx + 1));
+    target.click();
+    ok($("btn-next").disabled === false, "Next enabled after answer");
+    ok($("quiz-answered-label").textContent.indexOf(String(idx + 1)) !== -1 || idx >= 44,
+      "answered counter advances");
+    $("btn-next").click();
+    if (idx < 44) {
+      ok(doc.querySelector("#view-quiz").hidden === false, "still on quiz before the last question");
+    }
+  }
+
+  ok(doc.querySelector("#view-result").hidden === false, "result view appears after last question");
+  // Wrapped answer pattern → type 5 totals 25, wins decisively.
+  ok($("result-number").textContent === "5", "result number is 5 (wrapped answers)");
+  ok($("result-name").textContent === "The Investigator", "result name is The Investigator");
+  ok($("stat-wing").textContent.indexOf("4") !== -1, "wing shown from stronger neighbor");
+  ok($("stat-triad").textContent.indexOf("Head") !== -1, "triad shown");
+  ok($("result-tie").hidden === true, "no tie note when decisive");
+
+  // Copy path: no clipboard in jsdom → honest manual-copy fallback message.
+  $("btn-copy").click();
+  ok($("copy-feedback").hidden === false, "copy feedback appears after copy attempt");
+  ok($("copy-feedback").textContent.indexOf("manually") !== -1, "fallback message is honest about copying");
+
+  // Retake: arm → confirm → back to intro, store cleared.
+  const retakeBtn = $("btn-retake");
+  retakeBtn.click();
+  ok(retakeBtn.textContent === "Really start over?", "retake arms with a confirm label");
+  retakeBtn.click();
+  ok(doc.querySelector("#view-intro").hidden === false, "confirmed retake returns to intro");
+  ok(doc.querySelector("#view-quiz").hidden === true, "quiz hidden after retake");
+
+  ok(errors.length === 0, "zero console errors", errors);
+  window.close();
+}
+
+/* ---------- resume: seeded partial answers ---------- */
+
+{
+  const partial = new Array(45).fill(null);
+  partial[0] = 4; partial[1] = 5; partial[2] = 3;
+  const { window, document: doc } = buildWindow(partial);
+  const $ = (id) => doc.getElementById(id);
+
+  ok(doc.querySelector("#view-intro").hidden === false, "intro shows for returning visitor");
+  ok($("btn-start").textContent.indexOf("Continue") !== -1, "button says Continue when answers exist");
+  ok($("resume-note").hidden === false, "resume note visible");
+  ok($("resume-note").textContent.indexOf("saved on this device") !== -1, "note mentions on-device save");
+
+  $("btn-start").click();
+  ok($("quiz-progress-label").textContent === "Question 4 of 45", "resumes at question 4 (index 3)");
+  ok($("quiz-answered-label").textContent === "3 answered", "answered counter restored");
+  const sel = doc.querySelectorAll(".option.selected");
+  ok(sel.length === 0, "no selection shown for the current (unanswered) question");
+  ok($("btn-next").disabled === true, "Next disabled on the in-progress question");
+  window.close();
+}
+
+console.log("\nui: " + passed + " assertions passed");
+if (process.exitCode) { console.log("ui: FAILURES PRESENT"); }

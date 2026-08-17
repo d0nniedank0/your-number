@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Number — the honest, free Enneagram</title>
+  <meta name="description" content="Answer 45 honest questions and get your Enneagram type — your wing, your triad, your stress and growth lines. Free forever. No account. No paywall." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23D85A30' stroke-width='5'/%3E%3Cg fill='%234A1B0C'%3E%3Ccircle cx='53' cy='32' r='3.5'/%3E%3Ccircle cx='48.1' cy='45.4' r='3.5'/%3E%3Ccircle cx='34.9' cy='52.7' r='3.5'/%3E%3Ccircle cx='19.1' cy='47.3' r='3.5'/%3E%3Ccircle cx='11' cy='32' r='3.5'/%3E%3Ccircle cx='19.1' cy='16.7' r='3.5'/%3E%3Ccircle cx='34.9' cy='11.3' r='3.5'/%3E%3Ccircle cx='48.1' cy='18.6' r='3.5'/%3E%3Ccircle cx='32' cy='32' r='3.5'/%3E%3C/g%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#FAECE7" />
+  <meta property="og:title" content="Your Number — the honest, free Enneagram" />
+  <meta property="og:description" content="45 honest questions, your real result. Free forever — no account, no email, no paywall." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://your-number.pages.dev/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="#top" aria-label="Your Number home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="21" fill="none" stroke="currentColor" stroke-width="5" />
+        <g fill="currentColor">
+          <circle cx="53" cy="32" r="3.5" /><circle cx="48.1" cy="45.4" r="3.5" />
+          <circle cx="34.9" cy="52.7" r="3.5" /><circle cx="19.1" cy="47.3" r="3.5" />
+          <circle cx="11" cy="32" r="3.5" /><circle cx="19.1" cy="16.7" r="3.5" />
+          <circle cx="34.9" cy="11.3" r="3.5" /><circle cx="48.1" cy="18.6" r="3.5" />
+          <circle cx="32" cy="32" r="3.5" />
+        </g>
+      </svg>
+      <span class="brand-text">Your <em>Number</em></span>
+    </a>
+    <p class="tagline">The honest, free Enneagram</p>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ INTRO ============ -->
+    <section id="view-intro" class="view" aria-label="Welcome">
+      <div class="page">
+        <h1>Get your number.<br /><em>It's free.</em></h1>
+        <p class="lede">
+          Forty-five honest questions. Two minutes a page, six minutes total.
+          At the end you get your Enneagram type — your wing, your triad, and the
+          lines you walk under stress and in growth. No account. No email.
+          No &ldquo;pay to unlock your result.&rdquo; Your answers never leave this page.
+        </p>
+
+        <div class="steps" aria-label="How it works">
+          <div class="step"><span class="step-num">1</span><p>Answer 45 short questions, one at a time. Be honest — nobody's watching.</p></div>
+          <div class="step"><span class="step-num">2</span><p>We add up your scores: nine types, no tricks, no weighting mystery.</p></div>
+          <div class="step"><span class="step-num">3</span><p>Your result appears instantly — read it, copy it, share it, keep it.</p></div>
+        </div>
+
+        <div class="cta">
+          <button id="btn-start" class="btn btn-primary" type="button">Begin — it's free</button>
+          <p id="resume-note" class="subtle" hidden></p>
+        </div>
+
+        <blockquote class="pledge">
+          <p><strong>The small print, upfront:</strong> this test was written from scratch, in the open, because the
+          classic paid tests shouldn't get to own your self-knowledge. Free forever. If a paywall ever appears,
+          it's a bug — tell us.</p>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- ============ QUIZ ============ -->
+    <section id="view-quiz" class="view" hidden aria-label="The questions">
+      <div class="page page-narrow">
+        <div class="quiz-top">
+          <p id="quiz-progress-label" class="progress-label">Question 1 of 45</p>
+          <p id="quiz-answered-label" class="progress-answered">0 answered</p>
+        </div>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="45" aria-valuenow="0" id="quiz-progress">
+          <div class="progress-fill" id="quiz-progress-fill"></div>
+        </div>
+
+        <div class="question-card">
+          <p id="quiz-counter" class="kicker">Question <span id="quiz-num">1</span> of 45</p>
+          <h2 id="quiz-text" class="question-text">…</h2>
+          <div id="quiz-options" class="options" role="radiogroup" aria-label="How true is this of you?"></div>
+          <div class="quiz-nav">
+            <button id="btn-back" class="btn btn-ghost" type="button">&larr; Back</button>
+            <button id="btn-next" class="btn btn-primary" type="button" disabled>Next</button>
+          </div>
+          <p class="footnote">Your answers save automatically on this device. Nothing is sent anywhere.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RESULT ============ -->
+    <section id="view-result" class="view" hidden aria-label="Your result">
+      <div class="page page-narrow">
+        <p class="kicker reveal-kicker">Your number is</p>
+        <div class="result-number" id="result-number" aria-live="polite">—</div>
+        <h2 id="result-name" class="result-name">…</h2>
+        <p id="result-blurb" class="result-blurb">…</p>
+        <p id="result-tie" class="tie-note" hidden></p>
+
+        <dl class="result-stats">
+          <div class="stat">
+            <dt>Wing</dt>
+            <dd id="stat-wing">—</dd>
+          </div>
+          <div class="stat">
+            <dt>Triad</dt>
+            <dd id="stat-triad">—</dd>
+          </div>
+          <div class="stat">
+            <dt>Under stress you lean toward</dt>
+            <dd id="stat-stress">—</dd>
+          </div>
+          <div class="stat">
+            <dt>In growth you lean toward</dt>
+            <dd id="stat-security">—</dd>
+          </div>
+        </dl>
+
+        <div class="result-actions">
+          <button id="btn-copy" class="btn btn-primary" type="button">Copy your result — paste it anywhere</button>
+          <button id="btn-retake" class="btn btn-ghost" type="button">Retake the test</button>
+        </div>
+        <p id="copy-feedback" class="subtle" hidden>Copied — go tell someone your number.</p>
+        <p class="footnote">This card is yours. No watermark, no &ldquo;upgrade to unlock the rest.&rdquo;</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="colophon">
+    <p><strong>Your Number</strong> — the honest, free Enneagram. No account, no email, no paywall, ever.</p>
+    <p class="colophon-small">Written from scratch in the open · answers stay on your device · made with honest ink.</p>
+  </footer>
+
+  <script src="js/engine.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>

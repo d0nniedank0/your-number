@@ -1,0 +1,12 @@
+{
+  "name": "your-number",
+  "version": "1.0.0",
+  "description": "The honest, free Enneagram — 45 original questions, your real result. No account. No paywall.",
+  "private": true,
+  "scripts": {
+    "test": "node test/engine.test.js && node test/ui.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}
