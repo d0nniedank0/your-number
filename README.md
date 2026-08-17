@@ -40,9 +40,12 @@ no license mines, no tricks.
 3. **Your result, honestly**: your number, the type's name and blurb, wing,
    triad, stress + growth arrows — and a nine-bar score chart so you can see
    how close it really was. When it's close, the app says so and hands the
-   decision back to you.
-4. **Copy your result** as plain text and paste it anywhere. No watermark,
-   no "upgrade to unlock the rest."
+   decision back to you. Notes on classic near-miss pairs (1/8, 4/5, 9/6) help
+   you read the top contenders side by side.
+4. **Copy your result** as plain text and paste it anywhere, or copy the raw
+   scores as JSON. No watermark, no "upgrade to unlock the rest."
+5. **Print the result card** straight from your browser — Ctrl/Cmd+P gives a
+   clean single-page result sheet.
 
 ## Stack
 
@@ -73,7 +76,7 @@ static files on a CDN.
 ## Roadmap
 
 - Possible: shareable deep-links that render a specific result.
-- Possible: a printable / image version of the result card.
+- Possible: an image/PDF export of the result card (print stylesheet already ships).
 
 ---
 
