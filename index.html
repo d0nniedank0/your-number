@@ -11,6 +11,9 @@
   <meta property="og:description" content="Honest questions, your real result. Free forever — no account, no email, no paywall." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://your-number-8hf.pages.dev/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Your Number — the honest, free Enneagram" />
+  <meta name="twitter:description" content="Honest questions, your real result. Free forever — no account, no email, no paywall." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
@@ -134,6 +137,7 @@
           <ul id="close-list" class="close-list" aria-label="The numbers that could be yours"></ul>
           <div id="close-picks" class="close-picks" aria-label="Choose your number"></div>
           <p id="chosen-note" class="chosen-note" hidden></p>
+          <p id="close-boundary-note" class="close-rule"></p>
           <p class="close-rule">A test is a starting point. Only you choose your number.</p>
         </div>
 
@@ -152,9 +156,11 @@
 
         <div class="result-actions">
           <button id="btn-copy" class="btn btn-primary" type="button">Copy your result — paste it anywhere</button>
+          <button id="btn-copy-json" class="btn btn-ghost" type="button">Copy raw scores (JSON)</button>
           <button id="btn-retake" class="btn btn-ghost" type="button">Retake the test</button>
         </div>
         <p id="copy-feedback" class="subtle" hidden>Copied — go tell someone your number.</p>
+        <p id="copy-json-feedback" class="subtle" hidden>Raw scores copied to clipboard.</p>
         <p class="footnote">This card is yours. No watermark, no &ldquo;upgrade to unlock the rest.&rdquo;</p>
       </div>
     </section>

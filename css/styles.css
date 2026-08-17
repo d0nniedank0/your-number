@@ -822,3 +822,37 @@ h1 em {
   .stat dd { text-align: left; }
   .modal-panel { padding: 1.2rem 1rem 1.4rem; }
 }
+
+/* ---------- Print result card ---------- */
+
+@media print {
+  html { scroll-behavior: auto; }
+  body {
+    background: #fff !important;
+    color: #222 !important;
+    font-size: 12pt;
+  }
+  body::before { display: none; }
+  .masthead, .colophon, .pledge, .extended-block, .result-actions, #types-modal, .quiz-top, .progress, .quiz-nav, .footnote { display: none !important; }
+  .view { animation: none; }
+  #view-intro, #view-quiz { display: none !important; }
+  #view-result { display: block !important; }
+  #view-result[hidden] { display: block !important; }
+  .page { max-width: 100%; padding: 0; }
+  .question-card, .result-stats, .score-section, .close-panel, .growth-block {
+    box-shadow: none;
+    border: 1pt solid #ccc;
+    break-inside: avoid;
+  }
+  .result-number { color: #b34722; font-size: 6rem; }
+  .result-name { color: #222; }
+  .score-fill { background: #999 !important; }
+  .score-row.top .score-fill { background: #b34722 !important; }
+  .score-label { width: 140px; }
+  a { text-decoration: none; color: #222; }
+  .close-rule { color: #b34722; }
+}
+
+@page {
+  margin: 0.75in;
+}

@@ -8,10 +8,11 @@
 
 if (typeof document !== "undefined") {
   (function () {
-    var STORE_ANSWERS = "yn:v1:answers";
-    var STORE_INDEX = "yn:v1:index";
-    var STORE_EXTINDEX = "yn:v1:extindex";
-    var STORE_MODE = "yn:v1:mode";
+    // v2 storage keys: bump the version whenever the answer schema changes.
+    var STORE_ANSWERS = "yn:v2:answers";
+    var STORE_INDEX = "yn:v2:index";
+    var STORE_EXTINDEX = "yn:v2:extindex";
+    var STORE_MODE = "yn:v2:mode";
     var SHORT_COUNT = 45;
     var EXT_COUNT = 27;
 
@@ -44,8 +45,9 @@ if (typeof document !== "undefined") {
       resultClose: document.getElementById("result-close"),
       closeText: document.getElementById("close-text"),
       closePicks: document.getElementById("close-picks"),
-      chosenNote: document.getElementById("chosen-note"),
       closeList: document.getElementById("close-list"),
+      closeBoundaryNote: document.getElementById("close-boundary-note"),
+      chosenNote: document.getElementById("chosen-note"),
       extendedBlock: document.getElementById("extended-block"),
       extendedTitle: document.getElementById("extended-title"),
       extendedCopy: document.getElementById("extended-copy"),
@@ -59,6 +61,8 @@ if (typeof document !== "undefined") {
       typesList: document.getElementById("types-list"),
       copy: document.getElementById("btn-copy"),
       copyFeedback: document.getElementById("copy-feedback"),
+      copyJson: document.getElementById("btn-copy-json"),
+      copyJsonFeedback: document.getElementById("copy-json-feedback"),
       retake: document.getElementById("btn-retake"),
     };
 
@@ -78,18 +82,38 @@ if (typeof document !== "undefined") {
         var raw = localStorage.getItem(STORE_ANSWERS);
         if (!raw) return null;
         var arr = JSON.parse(raw);
-        if (!Array.isArray(arr) || (arr.length !== 45 && arr.length !== ITEMS.length)) return null;
-        while (arr.length < ITEMS.length) { arr.push(null); } // v1 → v2 migration
+        // v2 schema: exactly the current item count. Older v1 "yn:v1:*" data
+        // is intentionally ignored so the user gets a clean reset prompt rather
+        // than silent partial migration across incompatible schemas.
+        if (!Array.isArray(arr) || arr.length !== ITEMS.length) return null;
         return arr.map(function (v) { return (typeof v === "number" && v >= 1 && v <= 5) ? v : null; });
       } catch (e) { return null; }
     }
 
+    function showStorageWarning() {
+      // Non-blocking notice appended to the current view's footnote area if
+      // available, otherwise a one-time alert. Users can keep going; we just
+      // stop pretending everything saved.
+      var footnote = document.querySelector("#view-quiz .footnote, #view-intro .pledge");
+      var msg = "Storage is full or private mode is on — your answers won't be saved between visits.";
+      if (footnote && footnote.textContent.indexOf("Storage is full") === -1) {
+        footnote.textContent = msg + " " + footnote.textContent;
+      } else if (typeof window !== "undefined" && window.alert) {
+        window.alert(msg);
+      }
+    }
+
     function saveAnswers() {
-      try { localStorage.setItem(STORE_ANSWERS, JSON.stringify(answers)); } catch (e) { /* private mode */ }
+      var saved = false;
       try {
+        localStorage.setItem(STORE_ANSWERS, JSON.stringify(answers));
         localStorage.setItem(STORE_MODE, mode);
         localStorage.setItem(mode === "extended" ? STORE_EXTINDEX : STORE_INDEX, String(index));
-      } catch (e) { /* ignore */ }
+        saved = true;
+      } catch (e) {
+        showStorageWarning();
+      }
+      return saved;
     }
 
     function clearAnswers() {
@@ -274,6 +298,23 @@ if (typeof document !== "undefined") {
       renderResult();
     }
 
+    // Classic near-miss pairs where a note helps the reader hold both types.
+    function boundaryNote(callSet) {
+      var has = function (a, b) {
+        return callSet.indexOf(a) !== -1 && callSet.indexOf(b) !== -1;
+      };
+      if (has(1, 8)) {
+        return "Types 1 and 8 both reach toward the right way of doing things: 1 reaches through self-correction, 8 through self-protection. If you felt seen by both, read them twice — the difference is where the pressure lives.";
+      }
+      if (has(4, 5)) {
+        return "Types 4 and 5 both turn inward, but 4 turns inward for feeling and 5 turns inward for knowing. Depth isn't the only clue — ask whether you disappear into emotion or into information.";
+      }
+      if (has(9, 6)) {
+        return "Types 6 and 9 both want steadiness, but 6 keeps watch and 9 lets the room decide. If you couldn't tell which was you, check whether peace calms you or suspicion does.";
+      }
+      return "";
+    }
+
     function renderResult() {
       var r = lastResult;
       var t = typeFor(r.primary);
@@ -308,6 +349,7 @@ if (typeof document !== "undefined") {
       }
 
       els.copyFeedback.hidden = true;
+      els.copyJsonFeedback.hidden = true;
 
       // Score bars — scale-aware (25 short, 40 extended).
       els.scorebars.innerHTML = "";
@@ -335,6 +377,7 @@ if (typeof document !== "undefined") {
       // Close-call panel — refuse to fake certainty when the margin is thin.
       els.closePicks.innerHTML = "";
       els.closeList.innerHTML = "";
+      els.closeBoundaryNote.textContent = "";
       if (r.close) {
         els.closeText.textContent = "Your top numbers landed within a few points of each other — read them all, then choose.";
         r.closeCall.forEach(function (n) {
@@ -349,6 +392,10 @@ if (typeof document !== "undefined") {
           b.dataset.pick = String(n);
           els.closePicks.appendChild(b);
         });
+        var note = boundaryNote(r.closeCall);
+        if (note) {
+          els.closeBoundaryNote.textContent = note;
+        }
         els.resultClose.hidden = false;
       } else {
         els.resultClose.hidden = true;
@@ -365,9 +412,13 @@ if (typeof document !== "undefined") {
         els.growthBlock.hidden = false;
       } else {
         els.extendedTitle.textContent = "The extended pass";
-        els.extendedCopy.textContent = r.close
-          ? "Your numbers are close — 27 more questions dig straight into who was tied."
-          : "Want to confirm your number? 27 more questions lock it in with precision.";
+        if (r.close && !r.chosen) {
+          els.extendedCopy.textContent = "Your numbers are close — 27 more questions dig straight into who was tied. Or choose your number above now; you can always come back.";
+        } else if (r.chosen) {
+          els.extendedCopy.textContent = "You chose your number — but if you want more precision, 27 more questions can confirm or complicate it. Either is honest.";
+        } else {
+          els.extendedCopy.textContent = "Want to confirm your number? 27 more questions lock it in with precision.";
+        }
         els.btnExtended.hidden = false;
         els.extendedBlock.hidden = false;
       }
@@ -400,7 +451,12 @@ if (typeof document !== "undefined") {
       els.copyFeedback.hidden = false;
     }
 
-    function manualCopy(text) {
+    function showJsonCopied() {
+      els.copyJsonFeedback.textContent = "Raw scores copied to clipboard.";
+      els.copyJsonFeedback.hidden = false;
+    }
+
+    function manualCopy(text, onDone) {
       var ta = document.createElement("textarea");
       ta.value = text;
       ta.setAttribute("readonly", "");
@@ -411,11 +467,14 @@ if (typeof document !== "undefined") {
       var ok = false;
       try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
       document.body.removeChild(ta);
-      if (ok) {
-        showCopied();
-      } else {
+      if (ok && onDone) {
+        onDone();
+      } else if (!ok && onDone === showCopied) {
         els.copyFeedback.textContent = "Copy didn't fire here — select the card text and copy it manually. The words are yours.";
         els.copyFeedback.hidden = false;
+      } else if (!ok) {
+        els.copyJsonFeedback.textContent = "JSON copy didn't fire here — your browser blocked it.";
+        els.copyJsonFeedback.hidden = false;
       }
     }
 
@@ -423,9 +482,40 @@ if (typeof document !== "undefined") {
       if (!lastResult) return;
       var text = buildShareText(lastResult);
       if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-        navigator.clipboard.writeText(text).then(showCopied).catch(function () { manualCopy(text); });
+        navigator.clipboard.writeText(text).then(showCopied).catch(function () { manualCopy(text, showCopied); });
       } else {
-        manualCopy(text);
+        manualCopy(text, showCopied);
+      }
+    }
+
+    function buildResultJson() {
+      if (!lastResult) return "";
+      var payload = {
+        primary: lastResult.primary,
+        primaryName: typeFor(lastResult.primary).name,
+        wing: lastResult.wing,
+        triad: lastResult.triad,
+        stress: lastResult.stress,
+        security: lastResult.security,
+        scores: lastResult.breakdown.map(function (b) {
+          return { type: b.n, name: b.name, score: b.score, maxScore: lastResult.maxScore };
+        }),
+        extended: lastResult.extended,
+        close: lastResult.close,
+        closeCall: lastResult.closeCall,
+        chosen: !!lastResult.chosen,
+        takenAt: new Date().toISOString(),
+      };
+      return JSON.stringify(payload, null, 2);
+    }
+
+    function copyJsonResult() {
+      var text = buildResultJson();
+      if (!text) return;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        navigator.clipboard.writeText(text).then(showJsonCopied).catch(function () { manualCopy(text, showJsonCopied); });
+      } else {
+        manualCopy(text, showJsonCopied);
       }
     }
 
@@ -550,6 +640,7 @@ if (typeof document !== "undefined") {
     els.next.addEventListener("click", goNext);
     els.back.addEventListener("click", goBack);
     els.copy.addEventListener("click", copyResult);
+    els.copyJson.addEventListener("click", copyJsonResult);
     els.retake.addEventListener("click", armRetake);
     els.btnExtended.addEventListener("click", enterExtended);
 

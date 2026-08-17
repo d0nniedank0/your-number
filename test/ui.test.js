@@ -39,7 +39,7 @@ function buildWindow(seedAnswers) {
       window.scrollTo = function () {}; // jsdom logs "Not implemented" otherwise
       try { window.localStorage.clear(); } catch (e) { /* ignore */ }
       if (seedAnswers !== undefined) {
-        window.localStorage.setItem("yn:v1:answers", JSON.stringify(seedAnswers));
+        window.localStorage.setItem("yn:v2:answers", JSON.stringify(seedAnswers));
       }
       window.addEventListener("error", function (ev) { errors.push(ev.message || String(ev)); });
     },
@@ -268,7 +268,7 @@ function scoreRowsTop(n, doc) {
 /* ---------- resume: seeded partial answers ---------- */
 
 {
-  const partial = new Array(45).fill(null);
+  const partial = new Array(72).fill(null);
   partial[0] = 4; partial[1] = 5; partial[2] = 3;
   const { window, document: doc } = buildWindow(partial);
   const $ = (id) => doc.getElementById(id);
