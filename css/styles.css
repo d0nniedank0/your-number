@@ -483,13 +483,13 @@ h1 em {
 }
 
 .colophon a {
-  color: var(--umber);
+  color: var(--terracotta);
   text-decoration: none;
-  border-bottom: 1px solid rgba(74, 27, 12, 0.4);
-  transition: border-color 0.15s ease;
+  font-style: normal;
+  transition: color 0.3s ease;
 }
 
-.colophon a:hover { border-bottom-color: var(--umber); }
+.colophon a:hover { color: var(--umber); }
 
 /* ---------- Responsive ---------- */
 
