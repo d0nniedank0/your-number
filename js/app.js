@@ -63,6 +63,7 @@ if (typeof document !== "undefined") {
       copyFeedback: document.getElementById("copy-feedback"),
       copyJson: document.getElementById("btn-copy-json"),
       copyJsonFeedback: document.getElementById("copy-json-feedback"),
+      printBtn: document.getElementById("btn-print"),
       retake: document.getElementById("btn-retake"),
     };
 
@@ -519,6 +520,12 @@ if (typeof document !== "undefined") {
       }
     }
 
+    function printResult() {
+      if (typeof window !== "undefined" && window.print) {
+        window.print();
+      }
+    }
+
     /* ---------- retake ---------- */
 
     function armRetake() {
@@ -641,6 +648,7 @@ if (typeof document !== "undefined") {
     els.back.addEventListener("click", goBack);
     els.copy.addEventListener("click", copyResult);
     els.copyJson.addEventListener("click", copyJsonResult);
+    els.printBtn.addEventListener("click", printResult);
     els.retake.addEventListener("click", armRetake);
     els.btnExtended.addEventListener("click", enterExtended);
 
