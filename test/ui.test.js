@@ -78,8 +78,8 @@ function ok(cond, name, ctx) {
   // Simpler: re-derive the same mapping from the rendered question order.
   let idx = 0;
   for (; idx < 45; idx++) {
-    const group = Math.floor(idx / 5);          // 0..8
-    const want = (group % 5) + 1;               // types 1..5 → 1..5, types 6..9 → 1..4
+    const group = Math.floor(idx / 5);          // 0..8 (item's type minus 1)
+    const want = (group === 7) ? 5 : 3;         // 5 on every type-8 item, 3 elsewhere → 8 wins
     const target = Array.prototype.find.call(
       $("quiz-options").children,
       (b) => Number(b.dataset.value) === want
@@ -96,12 +96,18 @@ function ok(cond, name, ctx) {
   }
 
   ok(doc.querySelector("#view-result").hidden === false, "result view appears after last question");
-  // Wrapped answer pattern → type 5 totals 25, wins decisively.
-  ok($("result-number").textContent === "5", "result number is 5 (wrapped answers)");
-  ok($("result-name").textContent === "The Investigator", "result name is The Investigator");
-  ok($("stat-wing").textContent.indexOf("4") !== -1, "wing shown from stronger neighbor");
-  ok($("stat-triad").textContent.indexOf("Head") !== -1, "triad shown");
+  // 5 on every type-8 item, 3 elsewhere → type 8 totals 21, wins by 6 (decisive).
+  ok($("result-number").textContent === "8", "result number is 8 (8-max scenario)");
+  ok($("result-name").textContent === "The Challenger", "result name is The Challenger");
+  ok($("stat-wing").textContent.indexOf("7") !== -1, "wing shown from stronger neighbor");
+  ok($("stat-triad").textContent.indexOf("Gut") !== -1, "triad shown");
   ok($("result-tie").hidden === true, "no tie note when decisive");
+  ok($("result-close").hidden === true, "no close-call panel when the margin is 6 points");
+  const scoreRows = doc.querySelectorAll(".score-row");
+  ok(scoreRows.length === 9, "all nine score bars rendered");
+  ok(doc.querySelectorAll(".score-row.top").length === 1, "exactly one top row highlighted");
+  ok(scoreRows[7].querySelector(".score-label").textContent.indexOf("Challenger") !== -1, "type 8 row present");
+  ok(scoreRows[7].querySelector(".score-val").textContent === "21", "type 8's score shown as 21");
 
   // Copy path: no clipboard in jsdom → honest manual-copy fallback message.
   $("btn-copy").click();
@@ -117,6 +123,30 @@ function ok(cond, name, ctx) {
   ok(doc.querySelector("#view-quiz").hidden === true, "quiz hidden after retake");
 
   ok(errors.length === 0, "zero console errors", errors);
+  window.close();
+}
+
+/* ---------- close-call drive: all 3s → honest tie + close panel ---------- */
+
+{
+  const { window, document: doc, errors } = buildWindow();
+  const $ = (id) => doc.getElementById(id);
+  $("btn-start").click();
+  for (let idx = 0; idx < 45; idx++) {
+    const target = Array.prototype.find.call(
+      $("quiz-options").children,
+      (b) => Number(b.dataset.value) === 3
+    );
+    target.click();
+    $("btn-next").click();
+  }
+  ok($("result-number").textContent === "1", "all-3s: lowest tied number shows (1)");
+  ok($("result-tie").hidden === false, "tie note visible on a full tie");
+  ok($("result-tie").textContent.indexOf("tied with") !== -1, "tie note names the runner-up");
+  ok($("result-close").hidden === false, "close-call panel visible on a near-tie");
+  ok($("close-text").textContent.indexOf("fears") !== -1, "close panel offers the deciding question");
+  ok($("close-text").textContent.indexOf("1 The Reformer") !== -1, "close panel names the contenders");
+  ok(errors.length === 0, "zero console errors in close-call drive", errors);
   window.close();
 }
 

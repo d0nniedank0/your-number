@@ -35,6 +35,9 @@ if (typeof document !== "undefined") {
       statTriad: document.getElementById("stat-triad"),
       statStress: document.getElementById("stat-stress"),
       statSecurity: document.getElementById("stat-security"),
+      scorebars: document.getElementById("scorebars"),
+      resultClose: document.getElementById("result-close"),
+      closeText: document.getElementById("close-text"),
       copy: document.getElementById("btn-copy"),
       copyFeedback: document.getElementById("copy-feedback"),
       retake: document.getElementById("btn-retake"),
@@ -212,6 +215,43 @@ if (typeof document !== "undefined") {
       }
 
       els.copyFeedback.hidden = true;
+
+      // Score bars — the honest profile, all nine types.
+      els.scorebars.innerHTML = "";
+      r.breakdown.forEach(function (b) {
+        var row = document.createElement("div");
+        row.className = "score-row" + (b.n === r.primary ? " top" : "");
+        var label = document.createElement("span");
+        label.className = "score-label";
+        label.textContent = b.n + "  " + b.name;
+        var track = document.createElement("span");
+        track.className = "score-track";
+        var fill = document.createElement("span");
+        fill.className = "score-fill";
+        fill.style.width = Math.round((b.score / 25) * 100) + "%";
+        track.appendChild(fill);
+        var val = document.createElement("span");
+        val.className = "score-val";
+        val.textContent = String(b.score);
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(val);
+        els.scorebars.appendChild(row);
+      });
+
+      // Close-call panel — refuse to fake certainty when the margin is thin.
+      if (r.close) {
+        var contenders = r.closeCall.map(function (n) {
+          var t = typeFor(n);
+          return n + " " + t.name + " — fears " + t.fear;
+        });
+        els.closeText.textContent = "Your top numbers landed within a few points of each other: " +
+          contenders.join("; ") + ". Read them all, ask which fear is really yours, and pick honestly.";
+        els.resultClose.hidden = false;
+      } else {
+        els.resultClose.hidden = true;
+      }
+
       showView(els.result);
     }
 
