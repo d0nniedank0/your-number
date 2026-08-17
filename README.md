@@ -54,8 +54,11 @@ static files on a CDN.
 
 ## Roadmap
 
-- **v2**: an extended 60+ question deep-dive with growth and communication
-  notes per type.
+- **v2 — the extended pass**: 72 questions (8 per type, more reverse-keyed items
+  at the 1/8 and 4/5 boundaries), growth and communication notes per type, and
+  adaptive emphasis — the types that tied or nearly tied in the short pass get
+  deeper item coverage. Offered from every result page, close call or not: the
+  extended pass is a confirmation tool, not a tiebreaker prize.
 - Possible: shareable deep-links that render a specific result.
 
 ---
