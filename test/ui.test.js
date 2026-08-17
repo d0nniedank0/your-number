@@ -231,7 +231,7 @@ function scoreRowsTop(n, doc) {
   $("btn-extended").click();
   ok(doc.querySelector("#view-quiz").hidden === false, "extended button enters the deep dive");
   ok($("quiz-progress-label").textContent === "Extension 1 of 27", "extended progress label");
-  ok($("quiz-num").textContent === "E1", "extended question counter uses the E-prefix");
+  ok($("quiz-counter").textContent === "Extension 1 of 27", "extended question counter shows 1 of 27, not 'of 45'");
   for (let idx = 0; idx < 27; idx++) {
     Array.prototype.find.call($("quiz-options").children, (b) => Number(b.dataset.value) === 3).click();
     $("btn-next").click();

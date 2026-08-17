@@ -27,7 +27,6 @@ if (typeof document !== "undefined") {
       progress: document.getElementById("quiz-progress"),
       progressFill: document.getElementById("quiz-progress-fill"),
       counter: document.getElementById("quiz-counter"),
-      num: document.getElementById("quiz-num"),
       text: document.getElementById("quiz-text"),
       options: document.getElementById("quiz-options"),
       back: document.getElementById("btn-back"),
@@ -177,7 +176,9 @@ if (typeof document !== "undefined") {
     function renderQuestion() {
       var item = currentItem();
       var slot = currentSlot();
-      els.num.textContent = mode === "short" ? String(index + 1) : "E" + String(index + 1);
+      els.counter.textContent = mode === "short"
+        ? "Question " + (index + 1) + " of " + SHORT_COUNT
+        : "Extension " + (index + 1) + " of " + EXT_COUNT;
       els.text.textContent = item.text;
       els.options.innerHTML = "";
       LIKERT.forEach(function (opt) {
