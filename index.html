@@ -93,7 +93,7 @@
     <!-- ============ RESULT ============ -->
     <section id="view-result" class="view" hidden aria-label="Your result">
       <div class="page page-narrow">
-        <p class="kicker reveal-kicker">Your number is</p>
+        <p class="kicker reveal-kicker" id="result-kicker">Your number is</p>
         <div class="result-number" id="result-number" aria-live="polite">—</div>
         <h2 id="result-name" class="result-name">…</h2>
         <p id="result-blurb" class="result-blurb">…</p>
@@ -127,6 +127,8 @@
         <div id="result-close" class="close-panel" hidden>
           <h3>Close call — don't let a couple of points decide this</h3>
           <p id="close-text"></p>
+          <div id="close-picks" class="close-picks" aria-label="Choose your number"></div>
+          <p id="chosen-note" class="chosen-note" hidden></p>
           <p class="close-rule">A test is a starting point. Only you choose your number.</p>
         </div>
 

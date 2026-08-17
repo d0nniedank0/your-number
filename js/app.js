@@ -31,6 +31,7 @@ if (typeof document !== "undefined") {
       resultName: document.getElementById("result-name"),
       resultBlurb: document.getElementById("result-blurb"),
       resultTie: document.getElementById("result-tie"),
+      resultKicker: document.getElementById("result-kicker"),
       statWing: document.getElementById("stat-wing"),
       statTriad: document.getElementById("stat-triad"),
       statStress: document.getElementById("stat-stress"),
@@ -38,6 +39,8 @@ if (typeof document !== "undefined") {
       scorebars: document.getElementById("scorebars"),
       resultClose: document.getElementById("result-close"),
       closeText: document.getElementById("close-text"),
+      closePicks: document.getElementById("close-picks"),
+      chosenNote: document.getElementById("chosen-note"),
       copy: document.getElementById("btn-copy"),
       copyFeedback: document.getElementById("copy-feedback"),
       retake: document.getElementById("btn-retake"),
@@ -207,11 +210,21 @@ if (typeof document !== "undefined") {
       els.statStress.textContent = r.stress + " · " + stressT.name;
       els.statSecurity.textContent = r.security + " · " + secT.name;
       if (r.tie) {
-        var runner = typeFor(r.runnerUp);
-        els.resultTie.textContent = "Close call: you tied with " + r.runnerUp + " · " + runner.name + ". Read both and see which one fits best.";
+        var tied = r.ranked.filter(function (x) { return x.score === r.primaryScore; });
+        els.resultTie.textContent = "A real tie: " + tied.map(function (x) {
+          return x.n + " · " + typeFor(x.n).name;
+        }).join(", ") + ". Read them all, then choose which fits.";
         els.resultTie.hidden = false;
       } else {
         els.resultTie.hidden = true;
+      }
+
+      els.resultKicker.textContent = r.chosen ? "You chose" : "Your number is";
+      els.chosenNote.hidden = true;
+      if (r.chosen) {
+        els.chosenNote.textContent = "You chose " + r.primary + " — the raw scores were close, and your number is yours. " +
+          "Nothing wrong with knowing who you are.";
+        els.chosenNote.hidden = false;
       }
 
       els.copyFeedback.hidden = true;
@@ -239,7 +252,9 @@ if (typeof document !== "undefined") {
         els.scorebars.appendChild(row);
       });
 
-      // Close-call panel — refuse to fake certainty when the margin is thin.
+      // Close-call panel — refuse to fake certainty when the margin is thin,
+      // and hand the decision back with a real "choose your number" picker.
+      els.closePicks.innerHTML = "";
       if (r.close) {
         var contenders = r.closeCall.map(function (n) {
           var t = typeFor(n);
@@ -247,6 +262,14 @@ if (typeof document !== "undefined") {
         });
         els.closeText.textContent = "Your top numbers landed within a few points of each other: " +
           contenders.join("; ") + ". Read them all, ask which fear is really yours, and pick honestly.";
+        r.closeCall.forEach(function (n) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn btn-ghost pick";
+          b.textContent = "Choose " + n + " · " + typeFor(n).name;
+          b.dataset.pick = String(n);
+          els.closePicks.appendChild(b);
+        });
         els.resultClose.hidden = false;
       } else {
         els.resultClose.hidden = true;
@@ -338,6 +361,14 @@ if (typeof document !== "undefined") {
     els.back.addEventListener("click", goBack);
     els.copy.addEventListener("click", copyResult);
     els.retake.addEventListener("click", armRetake);
+
+    els.closePicks.addEventListener("click", function (ev) {
+      var btn = ev.target.closest("[data-pick]");
+      if (!btn || !lastResult) return;
+      var n = parseInt(btn.dataset.pick, 10);
+      lastResult = selectType(lastResult.scores, n);
+      renderResult();
+    });
 
     /* keyboard: 1–5 to answer, Enter to advance */
     document.addEventListener("keydown", function (ev) {

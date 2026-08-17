@@ -555,6 +555,23 @@ h1 em {
 
 .close-panel p { margin: 0 0 0.3rem; font-size: 0.98rem; color: var(--ink); }
 
+.close-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.7rem 0 0.4rem;
+}
+
+.close-picks .pick {
+  font-size: 0.95rem;
+  padding: 0.55rem 1.1rem;
+  min-height: 42px;
+}
+
+.chosen-note {
+  font-weight: 500;
+}
+
 .close-rule {
   font-style: italic;
   color: var(--terracotta);

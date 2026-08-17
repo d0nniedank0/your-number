@@ -142,12 +142,32 @@ function ok(cond, name, ctx) {
   }
   ok($("result-number").textContent === "1", "all-3s: lowest tied number shows (1)");
   ok($("result-tie").hidden === false, "tie note visible on a full tie");
-  ok($("result-tie").textContent.indexOf("tied with") !== -1, "tie note names the runner-up");
+  ok($("result-tie").textContent.indexOf("A real tie") !== -1, "tie note announces a real tie");
+  ok($("result-tie").textContent.indexOf("9 · The Peacemaker") !== -1, "tie note names every tied type");
   ok($("result-close").hidden === false, "close-call panel visible on a near-tie");
   ok($("close-text").textContent.indexOf("fears") !== -1, "close panel offers the deciding question");
   ok($("close-text").textContent.indexOf("1 The Reformer") !== -1, "close panel names the contenders");
+
+  // The decision is real: pick your number and the whole result follows.
+  const picks = doc.querySelectorAll("[data-pick]");
+  ok(picks.length === 9, "nine choose-your-number buttons on a full tie");
+  doc.querySelector('[data-pick="8"]').click();
+  ok($("result-number").textContent === "8", "choosing 8 makes 8 the number");
+  ok($("result-name").textContent === "The Challenger", "name follows the choice");
+  ok($("result-kicker").textContent === "You chose", "kicker flips to 'You chose'");
+  ok($("chosen-note").hidden === false, "chosen note visible after picking");
+  ok($("chosen-note").textContent.indexOf("8") !== -1, "chosen note names the pick");
+  ok($("stat-stress").textContent.indexOf("5") !== -1, "stress line follows the chosen type (8→5)");
+  ok(doc.querySelectorAll(".score-row.top").length === 1, "top row follows the chosen type");
+  ok(scoreRowsTop(8, doc), "chosen type's row is now the highlighted one");
+
   ok(errors.length === 0, "zero console errors in close-call drive", errors);
   window.close();
+}
+
+function scoreRowsTop(n, doc) {
+  const top = doc.querySelector(".score-row.top");
+  return !!top && top.querySelector(".score-label").textContent.indexOf(String(n)) !== -1;
 }
 
 /* ---------- resume: seeded partial answers ---------- */

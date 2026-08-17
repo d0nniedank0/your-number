@@ -4,7 +4,7 @@
 const assert = require("assert");
 const {
   TYPES, TRIADS, ARROWS, ITEMS, LIKERT,
-  typeFor, triadFor, wingFor, score, buildShareText,
+  typeFor, triadFor, wingFor, score, selectType, buildShareText,
 } = require("../js/engine.js");
 
 let passed = 0;
@@ -143,6 +143,24 @@ ok((() => { try { score(scenario(() => 0)); } catch (e) { return true; } return 
   "below-range answer throws");
 ok((() => { try { score(scenario(() => 6)); } catch (e) { return true; } return false; })(),
   "above-range answer throws");
+
+/* ---------- selectType (user-chosen number) ---------- */
+
+{
+  const r = score(scenario(() => 3)); // a full tie at 15 everywhere
+  const chosen = selectType(r.scores, 8);
+  ok(chosen.primary === 8 && chosen.chosen === true, "selectType adopts the chosen type");
+  ok(chosen.wing === 7, "wing recomputed for the chosen type (7, prev-first on tie)");
+  ok(chosen.triad === "gut" && chosen.stress === 5 && chosen.security === 2, "triad and arrows follow the choice");
+  ok(chosen.close === true, "still honestly a close call after choosing");
+  const txt = buildShareText(chosen);
+  ok(txt.indexOf("Your Number is 8 — The Challenger") !== -1, "share text speaks the chosen type");
+  ok(txt.indexOf("I chose my number") !== -1, "share text owns the choice");
+  ok((() => { try { selectType(r.scores, 11); } catch (e) { return true; } return false; })(),
+    "selectType rejects unknown types");
+  ok((() => { try { selectType(r.scores, 0); } catch (e) { return true; } return false; })(),
+    "selectType rejects zero");
+}
 
 /* ---------- share text ---------- */
 

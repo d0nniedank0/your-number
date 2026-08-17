@@ -251,6 +251,48 @@ function score(answers) {
   };
 }
 
+/**
+ * Re-interpret a score array for a user-chosen primary type. Used when a
+ * close call hands the decision back to the taker ("only you choose your
+ * number") — re-derives wing, triad, arrows, and breakdown around their pick.
+ */
+function selectType(scores, chosen) {
+  if (!Number.isInteger(chosen) || chosen < 1 || chosen > 9 || !typeFor(chosen)) {
+    throw new Error("unknown type: " + chosen);
+  }
+  const ranked = TYPES.map(function (t) { return { n: t.n, score: scores[t.n - 1] }; })
+    .sort(function (a, b) { return b.score - a.score; });
+  const others = ranked.filter(function (x) { return x.n !== chosen; });
+  const primaryScore = scores[chosen - 1];
+  const runnerUp = others[0] ? others[0].n : chosen;
+  const runnerUpScore = others[0] ? others[0].score : primaryScore;
+  const tie = primaryScore === runnerUpScore;
+  const close = tie || (primaryScore - runnerUpScore <= CLOSE_GAP);
+  const closeCall = ranked.filter(function (r) { return primaryScore - r.score <= CLOSE_GAP; })
+    .map(function (r) { return r.n; });
+  const arrows = ARROWS[chosen];
+  const breakdown = TYPES.map(function (t) {
+    return { n: t.n, name: t.name, score: scores[t.n - 1] };
+  });
+  return {
+    scores: scores,
+    primary: chosen,
+    primaryScore: primaryScore,
+    runnerUp: runnerUp,
+    runnerUpScore: runnerUpScore,
+    tie: tie,
+    close: close,
+    closeCall: closeCall,
+    wing: wingFor(chosen, scores),
+    triad: typeFor(chosen).triad,
+    stress: arrows.stress,
+    security: arrows.security,
+    ranked: ranked,
+    breakdown: breakdown,
+    chosen: true,
+  };
+}
+
 /** Plain-text share card — the anti-paywall gift. No images, paste anywhere. */
 function buildShareText(r) {
   const t = typeFor(r.primary);
@@ -261,11 +303,13 @@ function buildShareText(r) {
   const tieLine = r.tie
     ? "  (tied with " + typeFor(r.runnerUp).name + " — read both and see which fits)"
     : "";
-  const closeLine = (r.tie || r.close)
-    ? "  The top of my chart was close: " + r.closeCall.map(function (n) {
-        return n + " (" + r.scores[n - 1] + ")";
-      }).join(", ") + " — a test is a starting point, the number you choose is yours."
-    : "";
+  const closeLine = r.chosen
+    ? "  I chose my number — the raw scores were close, and the choice is mine."
+    : (r.tie || r.close)
+        ? "  The top of my chart was close: " + r.closeCall.map(function (n) {
+            return n + " (" + r.scores[n - 1] + ")";
+          }).join(", ") + " — a test is a starting point, the number you choose is yours."
+        : "";
   return [
     "Your Number is " + r.primary + " — " + t.name,
     "",
@@ -293,6 +337,7 @@ if (typeof module !== "undefined") {
     triadFor: triadFor,
     wingFor: wingFor,
     score: score,
+    selectType: selectType,
     buildShareText: buildShareText,
   };
 }
