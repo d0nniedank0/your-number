@@ -32,6 +32,9 @@
       <span class="brand-text">Your <em>Number</em></span>
     </a>
     <p class="tagline">The honest, free Enneagram</p>
+    <nav class="masthead-nav" aria-label="Site navigation">
+      <button id="btn-all-types" class="nav-link" type="button">All nine types</button>
+    </nav>
   </header>
 
   <main id="top">
@@ -127,6 +130,7 @@
         <div id="result-close" class="close-panel" hidden>
           <h3>Close call — don't let a couple of points decide this</h3>
           <p id="close-text"></p>
+          <ul id="close-list" class="close-list" aria-label="The numbers that could be yours"></ul>
           <div id="close-picks" class="close-picks" aria-label="Choose your number"></div>
           <p id="chosen-note" class="chosen-note" hidden></p>
           <p class="close-rule">A test is a starting point. Only you choose your number.</p>
@@ -147,6 +151,17 @@
     <p><strong>Your Number</strong> — the honest, free Enneagram. No account, no email, no paywall, ever.</p>
     <p class="colophon-small">Written from scratch in the open · answers stay on your device · made with honest ink by <a href="https://twitter.com/daanisharif" target="_blank" rel="noopener noreferrer">CHΛOS</a>.</p>
   </footer>
+
+  <!-- All nine types — the free knowledge layer -->
+  <div id="types-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="types-modal-title">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel" role="document">
+      <button id="btn-close-types" class="modal-close" type="button" aria-label="Close">×</button>
+      <h2 id="types-modal-title" class="modal-title">All nine types — all free</h2>
+      <p class="modal-intro">No paywall hiding the rest of the map. Every number, its core fear and desire, and what it means.</p>
+      <div id="types-list" class="types-list"></div>
+    </div>
+  </div>
 
   <script src="js/engine.js" defer></script>
   <script src="js/app.js" defer></script>

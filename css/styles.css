@@ -57,7 +57,26 @@ body::before {
   padding: 1.6rem 2rem 0.4rem;
   position: relative;
   z-index: 1;
+  justify-content: space-between;
 }
+
+.masthead-nav { margin-left: auto; }
+
+.nav-link {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--terracotta);
+  cursor: pointer;
+  transition: color 0.25s ease;
+  min-height: 44px;
+}
+
+.nav-link:hover { color: var(--umber); }
+.nav-link:focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; border-radius: 6px; }
 
 .brand {
   display: inline-flex;
@@ -572,11 +591,148 @@ h1 em {
   font-weight: 500;
 }
 
+.close-list {
+  list-style: none;
+  margin: 0.4rem 0 0.2rem;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.close-list li {
+  background: var(--cream);
+  border-left: 3px solid var(--terracotta);
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
 .close-rule {
   font-style: italic;
   color: var(--terracotta);
   font-weight: 500;
 }
+
+/* ---------- All nine types modal ---------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal[hidden] { display: none; }
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(74, 27, 12, 0.38);
+}
+
+.modal-panel {
+  position: relative;
+  background: var(--card);
+  border-radius: 20px;
+  border-top: 4px solid var(--terracotta);
+  box-shadow: 0 24px 60px rgba(74, 27, 12, 0.28);
+  max-width: 880px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 1.6rem 1.8rem 1.8rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.9rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--umber);
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.modal-close:hover { color: var(--terracotta); background: rgba(216, 90, 48, 0.10); }
+
+.modal-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.55rem;
+  color: var(--umber);
+  margin: 0.2rem 0 0.3rem;
+  padding-right: 2rem;
+}
+
+.modal-title em { font-style: italic; color: var(--terracotta); }
+
+.modal-intro {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 0.9rem;
+}
+
+.types-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.8rem;
+}
+
+.type-card {
+  background: var(--cream);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(74, 27, 12, 0.07);
+  padding: 1rem 1.1rem;
+  display: flex;
+  gap: 0.85rem;
+}
+
+.type-card-num {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1.1;
+  color: var(--terracotta);
+  width: 40px;
+  text-align: center;
+}
+
+.type-card h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--umber);
+  margin: 0 0 0.15rem;
+}
+
+.type-card-triad {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 0.45rem;
+}
+
+.type-card p {
+  font-size: 0.9rem;
+  color: var(--ink);
+  margin: 0.25rem 0;
+}
+
+.type-card strong { color: var(--umber); }
+
+.type-card-blurb { font-style: italic; }
 
 /* ---------- Footer ---------- */
 
@@ -611,9 +767,11 @@ h1 em {
 
 @media (max-width: 520px) {
   body { font-size: 16px; }
-  .masthead { flex-direction: column; gap: 0.1rem; padding: 1.2rem 1.2rem 0.3rem; }
+  .masthead { flex-direction: column; gap: 0.2rem; padding: 1.2rem 1.2rem 0.3rem; align-items: flex-start; }
+  .masthead-nav { margin-left: 0; }
   .page { padding: 1rem 1.1rem 2.8rem; }
   .question-text { font-size: 1.4rem; }
   .stat { flex-direction: column; gap: 0.15rem; }
   .stat dd { text-align: left; }
+  .modal-panel { padding: 1.2rem 1rem 1.4rem; }
 }

@@ -145,8 +145,10 @@ function ok(cond, name, ctx) {
   ok($("result-tie").textContent.indexOf("A real tie") !== -1, "tie note announces a real tie");
   ok($("result-tie").textContent.indexOf("9 · The Peacemaker") !== -1, "tie note names every tied type");
   ok($("result-close").hidden === false, "close-call panel visible on a near-tie");
-  ok($("close-text").textContent.indexOf("fears") !== -1, "close panel offers the deciding question");
-  ok($("close-text").textContent.indexOf("1 The Reformer") !== -1, "close panel names the contenders");
+  ok($("close-text").textContent.indexOf("within a few points") !== -1, "close panel intro sentence");
+  const listItems = doc.querySelectorAll("#close-list li");
+  ok(listItems.length === 9, "close list has one row per contender");
+  ok(listItems[0].textContent.indexOf("1 · The Reformer — fears") !== -1, "close list rows name type and fear");
 
   // The decision is real: pick your number and the whole result follows.
   const picks = doc.querySelectorAll("[data-pick]");
@@ -168,6 +170,44 @@ function ok(cond, name, ctx) {
 function scoreRowsTop(n, doc) {
   const top = doc.querySelector(".score-row.top");
   return !!top && top.querySelector(".score-label").textContent.indexOf(String(n)) !== -1;
+}
+
+/* ---------- all nine types modal + logo home ---------- */
+
+{
+  const { window, document: doc, errors } = buildWindow();
+  const $ = (id) => doc.getElementById(id);
+  const open = () => $("btn-all-types").click();
+
+  ok($("types-modal").hidden === true, "modal hidden on load");
+  ok($("btn-all-types").textContent.indexOf("All nine types") !== -1, "masthead nav has the all-types link");
+
+  open();
+  ok($("types-modal").hidden === false, "modal opens from the masthead");
+  ok(doc.querySelectorAll(".type-card").length === 9, "nine type cards rendered");
+  ok(doc.querySelector(".type-card").textContent.indexOf("The Reformer") !== -1, "first card is type 1");
+  ok(doc.querySelector(".type-card").textContent.indexOf("Fears") !== -1, "cards carry the core fear/desire");
+
+  $("btn-close-types").click();
+  ok($("types-modal").hidden === true, "modal closes via the × button");
+
+  open();
+  doc.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  ok($("types-modal").hidden === true, "modal closes on Escape");
+
+  open();
+  doc.querySelector("[data-modal-close]").click();
+  ok($("types-modal").hidden === true, "modal closes on backdrop click");
+
+  // Logo = home: from the quiz view, the brand returns to the intro.
+  $("btn-start").click();
+  ok(doc.querySelector("#view-quiz").hidden === false, "quiz view active");
+  doc.querySelector(".brand").click();
+  ok(doc.querySelector("#view-intro").hidden === false, "logo click returns to the intro (home)");
+  ok(doc.querySelector("#view-quiz").hidden === true, "...and leaves the quiz view");
+
+  ok(errors.length === 0, "zero console errors in modal block", errors);
+  window.close();
 }
 
 /* ---------- resume: seeded partial answers ---------- */

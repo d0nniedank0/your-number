@@ -15,6 +15,7 @@ if (typeof document !== "undefined") {
       intro: document.getElementById("view-intro"),
       quiz: document.getElementById("view-quiz"),
       result: document.getElementById("view-result"),
+      brand: document.querySelector(".brand"),
       start: document.getElementById("btn-start"),
       resumeNote: document.getElementById("resume-note"),
       progressLabel: document.getElementById("quiz-progress-label"),
@@ -41,6 +42,11 @@ if (typeof document !== "undefined") {
       closeText: document.getElementById("close-text"),
       closePicks: document.getElementById("close-picks"),
       chosenNote: document.getElementById("chosen-note"),
+      closeList: document.getElementById("close-list"),
+      typesModal: document.getElementById("types-modal"),
+      btnAllTypes: document.getElementById("btn-all-types"),
+      btnCloseTypes: document.getElementById("btn-close-types"),
+      typesList: document.getElementById("types-list"),
       copy: document.getElementById("btn-copy"),
       copyFeedback: document.getElementById("copy-feedback"),
       retake: document.getElementById("btn-retake"),
@@ -255,14 +261,14 @@ if (typeof document !== "undefined") {
       // Close-call panel — refuse to fake certainty when the margin is thin,
       // and hand the decision back with a real "choose your number" picker.
       els.closePicks.innerHTML = "";
+      els.closeList.innerHTML = "";
       if (r.close) {
-        var contenders = r.closeCall.map(function (n) {
-          var t = typeFor(n);
-          return n + " " + t.name + " — fears " + t.fear;
-        });
-        els.closeText.textContent = "Your top numbers landed within a few points of each other: " +
-          contenders.join("; ") + ". Read them all, ask which fear is really yours, and pick honestly.";
+        els.closeText.textContent = "Your top numbers landed within a few points of each other — read them all, then choose.";
         r.closeCall.forEach(function (n) {
+          var t = typeFor(n);
+          var li = document.createElement("li");
+          li.textContent = n + " · " + t.name + " — fears " + t.fear;
+          els.closeList.appendChild(li);
           var b = document.createElement("button");
           b.type = "button";
           b.className = "btn btn-ghost pick";
@@ -334,6 +340,50 @@ if (typeof document !== "undefined") {
       }, 3000);
     }
 
+    /* ---------- all nine types ---------- */
+
+    function renderAllTypes() {
+      els.typesList.innerHTML = "";
+      TYPES.forEach(function (t) {
+        var card = document.createElement("article");
+        card.className = "type-card";
+        var num = document.createElement("span");
+        num.className = "type-card-num";
+        num.textContent = String(t.n);
+        var body = document.createElement("div");
+        body.className = "type-card-body";
+        var h = document.createElement("h3");
+        h.textContent = t.n + " · " + t.name;
+        var triad = document.createElement("p");
+        triad.className = "type-card-triad";
+        triad.textContent = TRIADS[t.triad].label;
+        var fd = document.createElement("p");
+        fd.className = "fear-desire";
+        fd.textContent = "Fears " + t.fear + " · Desires " + t.desire;
+        var blurb = document.createElement("p");
+        blurb.className = "type-card-blurb";
+        blurb.textContent = t.blurb;
+        body.appendChild(h);
+        body.appendChild(triad);
+        body.appendChild(fd);
+        body.appendChild(blurb);
+        card.appendChild(num);
+        card.appendChild(body);
+        els.typesList.appendChild(card);
+      });
+    }
+
+    function openTypesModal() {
+      els.typesModal.hidden = false;
+      document.body.style.overflow = "hidden";
+      els.btnCloseTypes.focus();
+    }
+
+    function closeTypesModal() {
+      els.typesModal.hidden = true;
+      document.body.style.overflow = "";
+    }
+
     /* ---------- wiring ---------- */
 
     function restoreIndex() {
@@ -370,8 +420,25 @@ if (typeof document !== "undefined") {
       renderResult();
     });
 
-    /* keyboard: 1–5 to answer, Enter to advance */
+    /* logo = home */
+    els.brand.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      showView(els.intro);
+      renderIntro();
+    });
+
+    els.btnAllTypes.addEventListener("click", openTypesModal);
+    els.btnCloseTypes.addEventListener("click", closeTypesModal);
+    els.typesModal.addEventListener("click", function (ev) {
+      if (ev.target.closest("[data-modal-close]")) closeTypesModal();
+    });
+
+    /* keyboard: 1–5 to answer, Enter to advance, Escape to close the modal */
     document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && !els.typesModal.hidden) {
+        closeTypesModal();
+        return;
+      }
       if (els.quiz.hidden) return;
       var k = parseInt(ev.key, 10);
       if (k >= 1 && k <= 5 && els.options.querySelectorAll(".option").length === LIKERT.length) {
@@ -385,6 +452,7 @@ if (typeof document !== "undefined") {
 
     /* boot */
     restoreIndex();
+    renderAllTypes();
     renderIntro();
   })();
 }
