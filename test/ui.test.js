@@ -108,6 +108,11 @@ function ok(cond, name, ctx) {
   ok(doc.querySelectorAll(".score-row.top").length === 1, "exactly one top row highlighted");
   ok(scoreRows[7].querySelector(".score-label").textContent.indexOf("Challenger") !== -1, "type 8 row present");
   ok(scoreRows[7].querySelector(".score-val").textContent === "21", "type 8's score shown as 21");
+  ok($("extended-block").hidden === false, "extended callout shown on every result");
+  ok($("extended-title").textContent === "The extended pass", "callout title before the deep dive");
+  ok($("btn-extended").hidden === false, "extended button visible pre-deep-dive");
+  ok($("extended-copy").textContent.indexOf("confirm") !== -1, "decisive results frame the pass as confirmation");
+  ok($("growth-block").hidden === true, "growth block hidden until the extended pass is taken");
 
   // Copy path: no clipboard in jsdom → honest manual-copy fallback message.
   $("btn-copy").click();
@@ -146,6 +151,7 @@ function ok(cond, name, ctx) {
   ok($("result-tie").textContent.indexOf("9 · The Peacemaker") !== -1, "tie note names every tied type");
   ok($("result-close").hidden === false, "close-call panel visible on a near-tie");
   ok($("close-text").textContent.indexOf("within a few points") !== -1, "close panel intro sentence");
+  ok($("extended-copy").textContent.indexOf("dig straight into") !== -1, "close-call results invite the deep dive");
   const listItems = doc.querySelectorAll("#close-list li");
   ok(listItems.length === 9, "close list has one row per contender");
   ok(listItems[0].textContent.indexOf("1 · The Reformer — fears") !== -1, "close list rows name type and fear");
@@ -207,6 +213,55 @@ function scoreRowsTop(n, doc) {
   ok(doc.querySelector("#view-quiz").hidden === true, "...and leaves the quiz view");
 
   ok(errors.length === 0, "zero console errors in modal block", errors);
+  window.close();
+}
+
+/* ---------- extended pass flow ---------- */
+
+{
+  const { window, document: doc, errors } = buildWindow();
+  const $ = (id) => doc.getElementById(id);
+  $("btn-start").click();
+  for (let idx = 0; idx < 45; idx++) {
+    const want = (Math.floor(idx / 5) === 7) ? 5 : 3; // 8-max short pass
+    Array.prototype.find.call($("quiz-options").children, (b) => Number(b.dataset.value) === want).click();
+    $("btn-next").click();
+  }
+  ok($("result-number").textContent === "8", "short pass gives 8 before the deep dive");
+  $("btn-extended").click();
+  ok(doc.querySelector("#view-quiz").hidden === false, "extended button enters the deep dive");
+  ok($("quiz-progress-label").textContent === "Extension 1 of 27", "extended progress label");
+  ok($("quiz-num").textContent === "E1", "extended question counter uses the E-prefix");
+  for (let idx = 0; idx < 27; idx++) {
+    Array.prototype.find.call($("quiz-options").children, (b) => Number(b.dataset.value) === 3).click();
+    $("btn-next").click();
+  }
+  ok(doc.querySelector("#view-result").hidden === false, "extended completion returns to the result");
+  // Short 8-max (8=21, others 15) + extended all-3s (every type +9) → 8=30, decisive.
+  ok($("result-number").textContent === "8", "extended score keeps 8 on top (8=30 vs 24)");
+  ok($("extended-title").textContent === "The full read", "callout flips to The full read");
+  ok($("btn-extended").hidden === true, "extended button hides after the deep dive");
+  ok($("growth-block").hidden === false, "growth block appears on the extended result");
+  ok($("growth-text").textContent.indexOf("softness") !== -1, "growth text present (type 8)");
+  ok($("comm-text").textContent.indexOf("direct") !== -1, "communication text present (type 8)");
+  const extTop = doc.querySelector(".score-row.top .score-val");
+  ok(extTop.textContent === "30", "extended bars score out of 40 (8=30)");
+  ok($("result-tie").hidden === true, "extended 6-point win stays decisive — no fake tie");
+  ok(errors.length === 0, "zero console errors in extended flow", errors);
+  window.close();
+}
+
+/* ---------- returning after full completion ---------- */
+
+{
+  const full = new Array(72).fill(3);
+  const { window, document: doc, errors } = buildWindow(full);
+  const $ = (id) => doc.getElementById(id);
+  ok($("btn-start").textContent.indexOf("See your result again") !== -1, "intro detects the finished full pass");
+  $("btn-start").click();
+  ok(doc.querySelector("#view-result").hidden === false, "start shows the result directly when complete");
+  ok($("growth-block").hidden === false, "growth surfaces immediately for the returning full taker");
+  ok(errors.length === 0, "zero console errors on return-to-result", errors);
   window.close();
 }
 

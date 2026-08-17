@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Your Number — the honest, free Enneagram</title>
-  <meta name="description" content="Answer 45 honest questions and get your Enneagram type — your wing, your triad, your stress and growth lines. Free forever. No account. No paywall." />
+  <meta name="description" content="Honest questions get you your Enneagram type — wing, triad, stress and growth lines — with a deeper 72-question pass for more precision. Free forever. No account. No paywall." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23D85A30' stroke-width='5'/%3E%3Cg fill='%234A1B0C'%3E%3Ccircle cx='53' cy='32' r='3.5'/%3E%3Ccircle cx='48.1' cy='45.4' r='3.5'/%3E%3Ccircle cx='34.9' cy='52.7' r='3.5'/%3E%3Ccircle cx='19.1' cy='47.3' r='3.5'/%3E%3Ccircle cx='11' cy='32' r='3.5'/%3E%3Ccircle cx='19.1' cy='16.7' r='3.5'/%3E%3Ccircle cx='34.9' cy='11.3' r='3.5'/%3E%3Ccircle cx='48.1' cy='18.6' r='3.5'/%3E%3Ccircle cx='32' cy='32' r='3.5'/%3E%3C/g%3E%3C/svg%3E" />
   <meta name="theme-color" content="#FAECE7" />
   <meta property="og:title" content="Your Number — the honest, free Enneagram" />
-  <meta property="og:description" content="45 honest questions, your real result. Free forever — no account, no email, no paywall." />
+  <meta property="og:description" content="Honest questions, your real result. Free forever — no account, no email, no paywall." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://your-number-8hf.pages.dev/" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -44,16 +44,17 @@
       <div class="page">
         <h1>Get your number.<br /><em>It's free.</em></h1>
         <p class="lede">
-          Forty-five honest questions. Two minutes a page, six minutes total.
-          At the end you get your Enneagram type — your wing, your triad, and the
-          lines you walk under stress and in growth. No account. No email.
-          No &ldquo;pay to unlock your result.&rdquo; Your answers never leave this page.
+          Forty-five honest questions — six minutes — and a deeper 72-question
+          pass when you want more precision. Either way you get your Enneagram
+          type: your wing, your triad, and the lines you walk under stress and
+          in growth. No account. No email. No &ldquo;pay to unlock your result.&rdquo;
+          Your answers never leave this page.
         </p>
 
         <div class="steps" aria-label="How it works">
-          <div class="step"><span class="step-num">1</span><p>Answer 45 short questions, one at a time. Be honest — nobody's watching.</p></div>
-          <div class="step"><span class="step-num">2</span><p>We add up your scores: nine types, no tricks, no weighting mystery.</p></div>
-          <div class="step"><span class="step-num">3</span><p>Your result appears instantly — read it, copy it, share it, keep it.</p></div>
+          <div class="step"><span class="step-num">1</span><p>Answer honest questions, one at a time. Be honest — nobody's watching.</p></div>
+          <div class="step"><span class="step-num">2</span><p>We add up your scores: nine types, no tricks, no weighting mystery. Close calls are reported, not hidden.</p></div>
+          <div class="step"><span class="step-num">3</span><p>Your result appears instantly — read it, copy it, share it, keep it. Deeper read? Go for the extended pass.</p></div>
         </div>
 
         <div class="cta">
@@ -134,6 +135,19 @@
           <div id="close-picks" class="close-picks" aria-label="Choose your number"></div>
           <p id="chosen-note" class="chosen-note" hidden></p>
           <p class="close-rule">A test is a starting point. Only you choose your number.</p>
+        </div>
+
+        <div id="extended-block" class="extended-block">
+          <h3 id="extended-title">The extended pass</h3>
+          <p id="extended-copy"></p>
+          <button id="btn-extended" class="btn btn-primary" type="button">Answer 27 more questions</button>
+        </div>
+
+        <div id="growth-block" class="growth-block" hidden>
+          <h3>What growth looks like for you</h3>
+          <p id="growth-text"></p>
+          <h3>How you're heard</h3>
+          <p id="comm-text"></p>
         </div>
 
         <div class="result-actions">

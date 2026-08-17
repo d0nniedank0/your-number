@@ -614,6 +614,53 @@ h1 em {
   font-weight: 500;
 }
 
+/* ---------- Extended pass ---------- */
+
+.extended-block {
+  margin: 0 0 1.6rem;
+  padding: 1rem 1.3rem;
+  border-left: 3px solid var(--terracotta);
+  background: rgba(216, 90, 48, 0.08);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.extended-block h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--umber);
+  margin: 0 0 0.4rem;
+}
+
+.extended-block p {
+  margin: 0 0 0.8rem;
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
+.growth-block {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.4rem 0.6rem;
+  margin: 0 0 1.6rem;
+}
+
+.growth-block h3 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--terracotta);
+  margin: 0 0 0.3rem;
+}
+
+.growth-block p {
+  margin: 0 0 1rem;
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
 /* ---------- All nine types modal ---------- */
 
 .modal {

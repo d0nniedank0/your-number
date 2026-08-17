@@ -1,7 +1,7 @@
 /* =========================================================================
    Your Number — UI layer
    Depends on js/engine.js globals (ITEMS, LIKERT, TYPES, TRIADS, typeFor,
-   score, buildShareText). Guarded so Node can require this file.
+   score, selectType, extendedOrder, buildShareText). Guarded for Node.
    ========================================================================= */
 
 "use strict";
@@ -10,6 +10,10 @@ if (typeof document !== "undefined") {
   (function () {
     var STORE_ANSWERS = "yn:v1:answers";
     var STORE_INDEX = "yn:v1:index";
+    var STORE_EXTINDEX = "yn:v1:extindex";
+    var STORE_MODE = "yn:v1:mode";
+    var SHORT_COUNT = 45;
+    var EXT_COUNT = 27;
 
     var els = {
       intro: document.getElementById("view-intro"),
@@ -43,6 +47,13 @@ if (typeof document !== "undefined") {
       closePicks: document.getElementById("close-picks"),
       chosenNote: document.getElementById("chosen-note"),
       closeList: document.getElementById("close-list"),
+      extendedBlock: document.getElementById("extended-block"),
+      extendedTitle: document.getElementById("extended-title"),
+      extendedCopy: document.getElementById("extended-copy"),
+      btnExtended: document.getElementById("btn-extended"),
+      growthBlock: document.getElementById("growth-block"),
+      growthText: document.getElementById("growth-text"),
+      commText: document.getElementById("comm-text"),
       typesModal: document.getElementById("types-modal"),
       btnAllTypes: document.getElementById("btn-all-types"),
       btnCloseTypes: document.getElementById("btn-close-types"),
@@ -53,8 +64,11 @@ if (typeof document !== "undefined") {
     };
 
     var answers = loadAnswers() || new Array(ITEMS.length).fill(null);
-    var index = 0;
+    var mode = "short";          // "short" (1-45) | "extended" (46-72)
+    var index = 0;               // position within the active mode's list
+    var extOrder = [];           // ordered item ids for the extended pass
     var lastResult = null;
+    var lastShortClose = null;   // closeCall from the short pass (adaptive order)
     var retakeArmed = false;
     var retakeTimer = null;
 
@@ -65,21 +79,48 @@ if (typeof document !== "undefined") {
         var raw = localStorage.getItem(STORE_ANSWERS);
         if (!raw) return null;
         var arr = JSON.parse(raw);
-        if (!Array.isArray(arr) || arr.length !== ITEMS.length) return null;
+        if (!Array.isArray(arr) || (arr.length !== 45 && arr.length !== ITEMS.length)) return null;
+        while (arr.length < ITEMS.length) { arr.push(null); } // v1 → v2 migration
         return arr.map(function (v) { return (typeof v === "number" && v >= 1 && v <= 5) ? v : null; });
       } catch (e) { return null; }
     }
 
     function saveAnswers() {
       try { localStorage.setItem(STORE_ANSWERS, JSON.stringify(answers)); } catch (e) { /* private mode */ }
-      try { localStorage.setItem(STORE_INDEX, String(index)); } catch (e) { /* ignore */ }
+      try {
+        localStorage.setItem(STORE_MODE, mode);
+        localStorage.setItem(mode === "extended" ? STORE_EXTINDEX : STORE_INDEX, String(index));
+      } catch (e) { /* ignore */ }
     }
 
     function clearAnswers() {
       answers = new Array(ITEMS.length).fill(null);
+      mode = "short";
       index = 0;
+      extOrder = [];
+      lastShortClose = null;
       try { localStorage.removeItem(STORE_ANSWERS); } catch (e) { /* ignore */ }
       try { localStorage.removeItem(STORE_INDEX); } catch (e) { /* ignore */ }
+      try { localStorage.removeItem(STORE_EXTINDEX); } catch (e) { /* ignore */ }
+      try { localStorage.removeItem(STORE_MODE); } catch (e) { /* ignore */ }
+    }
+
+    /* ---------- counting ---------- */
+
+    function answeredCount() {
+      return answers.filter(function (v) { return v !== null; }).length;
+    }
+
+    function shortAnswered() {
+      var n = 0;
+      for (var i = 0; i < SHORT_COUNT; i++) { if (answers[i] !== null) n++; }
+      return n;
+    }
+
+    function extAnswered() {
+      var n = 0;
+      for (var i = SHORT_COUNT; i < answers.length; i++) { if (answers[i] !== null) n++; }
+      return n;
     }
 
     /* ---------- views ---------- */
@@ -87,36 +128,46 @@ if (typeof document !== "undefined") {
     function showView(view) {
       [els.intro, els.quiz, els.result].forEach(function (v) { v.hidden = true; });
       view.hidden = false;
-      try { window.scrollTo(0, 0); } catch (e) { /* jsdom has no scrollTo */ }
+      try { window.scrollTo(0, 0); } catch (e) { /* jsdom */ }
     }
 
     /* ---------- intro ---------- */
 
     function renderIntro() {
-      var answered = answers.filter(function (v) { return v !== null; }).length;
-      if (answered === 0) {
+      var done = answeredCount();
+      if (done === 0) {
         els.start.textContent = "Begin — it's free";
         els.resumeNote.hidden = true;
-      } else if (answered === ITEMS.length) {
-        els.start.textContent = "See your number again";
-        els.resumeNote.textContent = "You've already finished once — take it again anytime. It always stays free.";
+      } else if (done === ITEMS.length) {
+        els.start.textContent = "See your result again";
+        els.resumeNote.textContent = "You've taken the full 72 questions. It's all still here, and it's all still free.";
+        els.resumeNote.hidden = false;
+      } else if (extAnswered() > 0) {
+        els.start.textContent = "Resume the extended pass — " + done + " answered";
+        els.resumeNote.textContent = "The deep dive continues. 27 extra questions, your answers saved on this device.";
         els.resumeNote.hidden = false;
       } else {
-        els.start.textContent = "Continue — " + answered + " answered";
-        els.resumeNote.textContent = "You left off around question " + (answered + 1) + ". Your answers are saved on this device.";
+        els.start.textContent = "Continue — " + done + " answered";
+        els.resumeNote.textContent = "You left off around question " + (done + 1) + ". Your answers are saved on this device.";
         els.resumeNote.hidden = false;
       }
     }
 
     /* ---------- quiz ---------- */
 
-    function answeredCount() {
-      return answers.filter(function (v) { return v !== null; }).length;
+    function currentItem() {
+      return mode === "short" ? ITEMS[index] : ITEMS[extOrder[index] - 1];
+    }
+
+    function currentSlot() {
+      return mode === "short" ? index : extOrder[index] - 1;
     }
 
     function renderProgress() {
       var done = answeredCount();
-      els.progressLabel.textContent = "Question " + (index + 1) + " of " + ITEMS.length;
+      els.progressLabel.textContent = mode === "short"
+        ? "Question " + (index + 1) + " of " + SHORT_COUNT
+        : "Extension " + (index + 1) + " of " + EXT_COUNT;
       els.answeredLabel.textContent = done + " answered";
       var pct = Math.round((done / ITEMS.length) * 100);
       els.progressFill.style.width = pct + "%";
@@ -124,17 +175,18 @@ if (typeof document !== "undefined") {
     }
 
     function renderQuestion() {
-      var item = ITEMS[index];
-      els.num.textContent = String(index + 1);
+      var item = currentItem();
+      var slot = currentSlot();
+      els.num.textContent = mode === "short" ? String(index + 1) : "E" + String(index + 1);
       els.text.textContent = item.text;
       els.options.innerHTML = "";
       LIKERT.forEach(function (opt) {
         var btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "option" + (answers[index] === opt.value ? " selected" : "");
+        btn.className = "option" + (answers[slot] === opt.value ? " selected" : "");
         btn.dataset.value = String(opt.value);
         btn.setAttribute("role", "radio");
-        btn.setAttribute("aria-checked", answers[index] === opt.value ? "true" : "false");
+        btn.setAttribute("aria-checked", answers[slot] === opt.value ? "true" : "false");
 
         var dot = document.createElement("span");
         dot.className = "option-dot";
@@ -149,54 +201,75 @@ if (typeof document !== "undefined") {
         els.options.appendChild(btn);
       });
 
-      var selected = answers[index] !== null;
+      var selected = answers[slot] !== null;
       els.next.disabled = !selected;
-      els.next.textContent = index === ITEMS.length - 1 ? "See my number" : "Next";
-      els.back.disabled = index === 0;
+      if (mode === "extended" && index === EXT_COUNT - 1) {
+        els.next.textContent = "See my final number";
+      } else if (mode === "short" && index === SHORT_COUNT - 1) {
+        els.next.textContent = "See my number";
+      } else {
+        els.next.textContent = "Next";
+      }
+      els.back.disabled = mode === "short" && index === 0;
       renderProgress();
     }
 
     function selectAnswer(value) {
-      answers[index] = value;
+      answers[currentSlot()] = value;
       saveAnswers();
       renderQuestion();
-      if (index < ITEMS.length - 1) {
-        els.next.focus();
-      }
+      var isLast = mode === "short"
+        ? index === SHORT_COUNT - 1
+        : index === EXT_COUNT - 1;
+      if (!isLast) { els.next.focus(); }
     }
 
     function goNext() {
-      if (answers[index] === null) return;
-      if (index === ITEMS.length - 1) {
-        finishQuiz();
+      if (answers[currentSlot()] === null) return;
+      var isLast = mode === "short"
+        ? index === SHORT_COUNT - 1
+        : index === EXT_COUNT - 1;
+      if (isLast) {
+        if (mode === "short") { finishShort(); } else { finishExtended(); }
       } else {
         index += 1;
-        try { localStorage.setItem(STORE_INDEX, String(index)); } catch (e) { /* ignore */ }
+        saveAnswers();
         renderQuestion();
       }
     }
 
     function goBack() {
-      if (index === 0) return;
-      index -= 1;
-      try { localStorage.setItem(STORE_INDEX, String(index)); } catch (e) { /* ignore */ }
-      renderQuestion();
-    }
-
-    /* ---------- result ---------- */
-
-    function finishQuiz() {
-      try {
-        lastResult = score(answers);
-      } catch (e) {
-        lastResult = null;
-        var n = answeredCount();
-        if (n < ITEMS.length) {
-          index = Math.min(n, ITEMS.length - 1);
-          renderQuestion();
-        }
+      if (mode === "short") {
+        if (index === 0) return;
+        index -= 1;
+        saveAnswers();
+        renderQuestion();
         return;
       }
+      // extended: back at the start returns to the (short) result
+      if (index > 0) {
+        index -= 1;
+        saveAnswers();
+        renderQuestion();
+        return;
+      }
+      if (shortAnswered() === SHORT_COUNT) {
+        lastResult = score(answers.slice(0, SHORT_COUNT));
+        lastShortClose = lastResult.closeCall;
+        renderResult();
+      }
+    }
+
+    /* ---------- results ---------- */
+
+    function finishShort() {
+      lastResult = score(answers.slice(0, SHORT_COUNT));
+      lastShortClose = lastResult.closeCall;
+      renderResult();
+    }
+
+    function finishExtended() {
+      lastResult = score(answers);
       renderResult();
     }
 
@@ -235,7 +308,7 @@ if (typeof document !== "undefined") {
 
       els.copyFeedback.hidden = true;
 
-      // Score bars — the honest profile, all nine types.
+      // Score bars — scale-aware (25 short, 40 extended).
       els.scorebars.innerHTML = "";
       r.breakdown.forEach(function (b) {
         var row = document.createElement("div");
@@ -247,7 +320,7 @@ if (typeof document !== "undefined") {
         track.className = "score-track";
         var fill = document.createElement("span");
         fill.className = "score-fill";
-        fill.style.width = Math.round((b.score / 25) * 100) + "%";
+        fill.style.width = Math.round((b.score / r.maxScore) * 100) + "%";
         track.appendChild(fill);
         var val = document.createElement("span");
         val.className = "score-val";
@@ -258,16 +331,15 @@ if (typeof document !== "undefined") {
         els.scorebars.appendChild(row);
       });
 
-      // Close-call panel — refuse to fake certainty when the margin is thin,
-      // and hand the decision back with a real "choose your number" picker.
+      // Close-call panel — refuse to fake certainty when the margin is thin.
       els.closePicks.innerHTML = "";
       els.closeList.innerHTML = "";
       if (r.close) {
         els.closeText.textContent = "Your top numbers landed within a few points of each other — read them all, then choose.";
         r.closeCall.forEach(function (n) {
-          var t = typeFor(n);
+          var tt = typeFor(n);
           var li = document.createElement("li");
-          li.textContent = n + " · " + t.name + " — fears " + t.fear;
+          li.textContent = n + " · " + tt.name + " — fears " + tt.fear;
           els.closeList.appendChild(li);
           var b = document.createElement("button");
           b.type = "button";
@@ -281,7 +353,43 @@ if (typeof document !== "undefined") {
         els.resultClose.hidden = true;
       }
 
+      // Extended pass callout — offered on EVERY result, close call or not.
+      els.growthBlock.hidden = true;
+      if (r.extended) {
+        els.extendedTitle.textContent = "The full read";
+        els.extendedCopy.textContent = "You answered all " + ITEMS.length + " questions. This is the deepest read this free test offers — and it will always be free.";
+        els.btnExtended.hidden = true;
+        els.growthText.textContent = t.growth;
+        els.commText.textContent = t.communication;
+        els.growthBlock.hidden = false;
+      } else {
+        els.extendedTitle.textContent = "The extended pass";
+        els.extendedCopy.textContent = r.close
+          ? "Your numbers are close — 27 more questions dig straight into who was tied."
+          : "Want to confirm your number? 27 more questions lock it in with precision.";
+        els.btnExtended.hidden = false;
+        els.extendedBlock.hidden = false;
+      }
+
       showView(els.result);
+    }
+
+    /* ---------- extended pass ---------- */
+
+    function firstUnansweredExtended() {
+      for (var i = 0; i < extOrder.length; i++) {
+        if (answers[extOrder[i] - 1] === null) return i;
+      }
+      return 0;
+    }
+
+    function enterExtended() {
+      extOrder = extendedOrder(lastShortClose || null);
+      mode = "extended";
+      index = firstUnansweredExtended();
+      saveAnswers();
+      showView(els.quiz);
+      renderQuestion();
     }
 
     /* ---------- copy ---------- */
@@ -384,22 +492,53 @@ if (typeof document !== "undefined") {
       document.body.style.overflow = "";
     }
 
-    /* ---------- wiring ---------- */
+    /* ---------- flow ---------- */
 
-    function restoreIndex() {
+    function startFlow() {
+      var done = answeredCount();
+      if (done === ITEMS.length) { finishExtended(); return; }
+      if (done >= SHORT_COUNT && extAnswered() === 0) { finishShort(); return; }
+      if (extAnswered() > 0) {
+        extOrder = extendedOrder(lastShortClose || null);
+        mode = "extended";
+        index = firstUnansweredExtended();
+      } else {
+        mode = "short";
+        index = answers.slice(0, SHORT_COUNT).indexOf(null);
+        if (index === -1) index = 0;
+      }
+      showView(els.quiz);
+      renderQuestion();
+    }
+
+    function restoreState() {
+      try {
+        var storedMode = localStorage.getItem(STORE_MODE);
+        if (storedMode === "extended" && extAnswered() > 0) {
+          if (shortAnswered() === SHORT_COUNT) {
+            var s = score(answers.slice(0, SHORT_COUNT));
+            lastShortClose = s.closeCall;
+            lastResult = s;
+          }
+          extOrder = extendedOrder(lastShortClose || null);
+          mode = "extended";
+          var ei = parseInt(localStorage.getItem(STORE_EXTINDEX), 10);
+          index = (Number.isInteger(ei) && ei >= 0 && ei < EXT_COUNT) ? ei : firstUnansweredExtended();
+          return;
+        }
+      } catch (e) { /* ignore */ }
+      mode = "short";
       try {
         var i = parseInt(localStorage.getItem(STORE_INDEX), 10);
-        if (Number.isInteger(i) && i >= 0 && i < ITEMS.length) { index = i; return; }
+        if (Number.isInteger(i) && i >= 0 && i < SHORT_COUNT) { index = i; return; }
       } catch (e) { /* ignore */ }
-      // No valid stored position → resume at the first unanswered question.
-      var first = answers.indexOf(null);
+      var first = answers.slice(0, SHORT_COUNT).indexOf(null);
       if (first !== -1) { index = first; }
     }
 
-    els.start.addEventListener("click", function () {
-      showView(els.quiz);
-      renderQuestion();
-    });
+    /* ---------- wiring ---------- */
+
+    els.start.addEventListener("click", startFlow);
 
     els.options.addEventListener("click", function (ev) {
       var btn = ev.target.closest(".option");
@@ -411,12 +550,13 @@ if (typeof document !== "undefined") {
     els.back.addEventListener("click", goBack);
     els.copy.addEventListener("click", copyResult);
     els.retake.addEventListener("click", armRetake);
+    els.btnExtended.addEventListener("click", enterExtended);
 
     els.closePicks.addEventListener("click", function (ev) {
       var btn = ev.target.closest("[data-pick]");
       if (!btn || !lastResult) return;
       var n = parseInt(btn.dataset.pick, 10);
-      lastResult = selectType(lastResult.scores, n);
+      lastResult = selectType(lastResult.scores, n, lastResult.maxScore, lastResult.extended);
       renderResult();
     });
 
@@ -451,7 +591,7 @@ if (typeof document !== "undefined") {
     });
 
     /* boot */
-    restoreIndex();
+    restoreState();
     renderAllTypes();
     renderIntro();
   })();
