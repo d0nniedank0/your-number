@@ -60,4 +60,4 @@ static files on a CDN.
 
 ---
 
-Made with honest ink. MIT license.
+Made with honest ink by CHΛOS ([@daanisharif](https://twitter.com/daanisharif)). MIT license.
